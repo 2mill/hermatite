@@ -1,12 +1,8 @@
 
-
 pub mod requests {
-	use https::{Request, Response};
+	use reqwest::blocking::Response;
+	use reqwest;
 	const API_URL: &str = "https://prices.runescape.wiki/api/v1/osrs";
-	enum Endpoint {
-		Mapping,
-		Latest(Option<u32>)
-	}
 
 	pub struct ItemPricingData {
 		id: u32,
@@ -16,15 +12,37 @@ pub mod requests {
 		low_time: u32,
 	}
 
-	fn request(endpoint: Endpoint) -> Result<Response, u32> {
-		let real_str = match endpoint {
-			Mapping => "/mapping",
-			Latest => "/latest",
-		};
-		let uri = format!("{}{}", API_URL, real_str);
-		let mut request = Request::builder();
-		unimplemented!()
+	enum Endpoint {
+		Mapping,
+		Latest(Option<u32>),
+		Timeseries(String),
+		Timestamp(String),
 	}
+
+	fn request(endpoint: Endpoint) -> Result<Response, reqwest::Error> {
+		let real_str = match endpoint {
+			Endpoint::Mapping => "/mapping",
+			Endpoint::Latest(opt) => unimplemented!(),
+
+			/**
+			 * match opt {
+				Some(id) => return latest with id param
+				None = => just return latest.
+
+			 }
+			 */
+
+			Endpoint::Timeseries(timestep) => unimplemented!(),
+			Endpoint::Timestamp(timestamp) => unimplemented!()
+
+
+			
+		};
+		let req_string = format!("{}{}", API_URL, real_str);
+		reqwest::blocking::get(req_string.as_str())
+	}
+
+
 	pub fn latest_all() -> Result<Vec<ItemPricingData> , String> {
 		unimplemented!()
 	}
