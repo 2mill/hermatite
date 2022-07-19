@@ -2,6 +2,7 @@
 pub mod requests {
 	use reqwest::blocking::Response;
 	use reqwest;
+use serde_json::Deserializer;
 	const API_URL: &str = "https://prices.runescape.wiki/api/v1/osrs";
 
 	pub struct ItemPricingData {
@@ -15,31 +16,45 @@ pub mod requests {
 	enum Endpoint {
 		Mapping,
 		Latest(Option<u32>),
-		Timeseries(String),
+		Timeseries(u32, String),
 		Timestamp(String),
 	}
 
+	fn url(endpoint: Endpoint) -> String {
+		format!(
+			"{}{}", 
+			API_URL, 
+			match endpoint {
+				Endpoint::Mapping => String::from("/mapping"),
+				Endpoint::Latest(opt) => 
+					if let Some(id) = opt {
+						format!("/latest?id={}", id.to_string())
+					} else {
+						String::from("/latest")
+					}
+				,
+				Endpoint::Timeseries(id, timestep) => {
+					format!("timeseries?timestep={}&id={}", timestep, id.to_string())
+				},
+				Endpoint::Timestamp(timestamp) => {
+					format!("/{}", timestamp)
+				}
+			}
+		)
+	}
+
 	fn request(endpoint: Endpoint) -> Result<Response, reqwest::Error> {
-		let real_str = match endpoint {
-			Endpoint::Mapping => "/mapping",
-			Endpoint::Latest(opt) => unimplemented!(),
+		reqwest::blocking::get(
+			url(endpoint)
+		)
+	}
 
-			/**
-			 * match opt {
-				Some(id) => return latest with id param
-				None = => just return latest.
+	fn deceralize_and_format_response(response: Response) -> () {
+		/**
+		 * Take apart string response and format into a struct
+		 */
 
-			 }
-			 */
-
-			Endpoint::Timeseries(timestep) => unimplemented!(),
-			Endpoint::Timestamp(timestamp) => unimplemented!()
-
-
-			
-		};
-		let req_string = format!("{}{}", API_URL, real_str);
-		reqwest::blocking::get(req_string.as_str())
+		 unimplemented!()
 	}
 
 
