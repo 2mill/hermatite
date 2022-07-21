@@ -1,6 +1,6 @@
 use serde_json;
 use std::future::Future;
-use reqwest::{Error};
+use reqwest;
 
 
 
@@ -27,20 +27,42 @@ enum Time {
 
 
 
-struct Response {
-	endpoint: Endpoint ,
-	data: Result<reqwest::Response, reqwest::Error>,
+
+struct Config {
+	endpoint: Endpoint,
+	user_agent: String,
 }
 
 const BASE: String = String::from("https://prices.runescape.wiki/api/v1/osrs");
 
-impl Response {
+struct ItemData {
+	config: Config,
+	result: reqwest::blocking::Response
+}
+
+trait Adapter {
+	fn new(config: Config) -> Self;
+	fn deseralize(&self) -> ();
+}
+
+impl Adapter for ItemData {
 	//This needs to be &str w/ a lifetime at some point
-	pub fn get(endpoint: Endpoint) -> Result<reqwest::Response, Error> {
-		let url = Response::endpoint_resolver(endpoint);
-		reqwest::blocking::get(url)
+	fn new(config: Config) -> Self {
+		let url = ItemData::endpoint_resolver(config.endpoint);
+		ItemData {
+			config,
+			result: reqwest::blocking::get(url).unwrap()
+		}
 	}
 
+	fn deseralize(&self) -> () { 
+		let text = self.result.text().unwrap().as_str();
+		serde_json::from_str(text).unwrap()
+	}
+
+}
+
+impl ItemData {
 	fn endpoint_resolver(endpoint: Endpoint) -> String {
 		let endpoint_str = match endpoint {
 			Endpoint::Mapping => String::from("/mapping"),
@@ -74,7 +96,12 @@ impl Response {
 
 		format!("{}{}", BASE, endpoint_str)
 	}
+
 }
+
+
+
+
 
 
 
