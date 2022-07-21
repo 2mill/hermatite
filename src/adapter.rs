@@ -1,69 +1,87 @@
-use serde_json::Deserializer;
-use reqwest;
-use core::future::Future;
+use serde_json;
+use reqwest::{Error};
 
-pub enum Endpoint {
+
+
+
+
+
+
+
+enum Endpoint {
 	Mapping,
 	Latest(Option<u32>),
-	Timeseries(u32, String),
-	Timestamp(String),
+	Timeseries(Time, u32),
+	Timestamp(Time),
+}
+
+enum Time {
+	FIVE_MIN,
+	ONE_HOUR,
+	SIX_HOURS
 }
 
 
-/**
- * This model is still not good right now. Need to work on it some more.
- */
 
-
-
-
-struct Client {
-	endpoint: Endpoint,
-	response: Result<reqwest::Response, reqwest::Error>
+struct Response {
+	endpoint: Endpoint ,
+	data: serde_json::Value,
 }
 
-enum ItemData {
-	Mapping,
-	ItemPricingDataList,
-	ItemPricingData,
-	TimedItemList,
-	TimedItem
-}
 
-impl Client {
-	pub fn request() -> Result<ItemData, reqwest::Error> {
+impl Response {
+	//This needs to be &str w/ a lifetime at some point
+	const BASE: String = String::from("https://prices.runescape.wiki/api/v1/osrs");
+	pub fn get(endpoint: Endpoint) -> Result<Self, Error> {
+		unimplemented!()
 
 	}
-}
-mod Request {
-	const BASE: &str = "https://prices.runescape.wiki/api/v1/osrs";
-	use crate::adapter::{
-		Endpoint,
-		Response
-	};
-	pub fn request(endpoint: Endpoint) -> impl Future<Output = Result<reqwest::Response, reqwest::Error>> {
-		let endpoint_string = match endpoint {
+
+	fn endpoint_resolver(endpoint: Endpoint) -> Result<serde_json::Value, reqwest::Error> {
+		let endpoint_str = match endpoint {
 			Endpoint::Mapping => String::from("/mapping"),
 			Endpoint::Latest(opt) => {
 				if let Some(id) = opt {
 					format!("/latest?id={}", id.to_string())
 				} else {
-					format!("/latest")
+					String::from("/latest")
 				}
 			},
-			Endpoint::Timeseries(id, timestep) => {
-				format!("/timeseries?timestep={}&id={}", timestep, id.to_string())
+			Endpoint::Timeseries(timestep, u32) => {
+				let time_str = match timestep {
+					Time::FIVE_MIN => String::from("5m"),
+					Time::ONE_HOUR => String:: from("1h"),
+					Time::SIX_HOURS => String::from("6h")
+				};
+				format!("/timeseries?timestep={}?id={}", time_str, u32.to_string())
 			},
 			Endpoint::Timestamp(timestamp) => {
-				format!("/{}", timestamp)
+				let time_str = match timestamp{
+					Time::FIVE_MIN => String::from("5m"),
+					Time::ONE_HOUR => String::from("1h"),
+					Time::SIX_HOURS => String::from("6h")
+				};
+				format!("/{}", time_str)
 			}
-		};
-		let complete_request_url = format!("{}{}", BASE, endpoint_string);
+		}
 
-		
-		reqwest::get(
-			complete_request_url
-		)
+		// At this point the reqwest should be made and matched for errors.
+		//Afterwards the struct is return 
+		unimplemented!()
+
 	}
-
+	fn resolve_time(time: Time) -> String {
+		
+	}
 }
+
+
+
+
+
+
+// trait Target {
+// 	fn request(endpoint: Endpoint) -> Result<serde_json::Result<T, serde_json::Error, reqwest::Error>;
+// }
+
+

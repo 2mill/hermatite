@@ -13,13 +13,10 @@ use serde_json::Deserializer;
 		low_time: u32,
 	}
 
-	enum Endpoint {
-		Mapping,
-		Latest(Option<u32>),
-		Timeseries(u32, String),
-		Timestamp(String),
-	}
+}
 
+
+	
 	fn url(endpoint: Endpoint) -> String {
 		format!(
 			"{}{}", 
@@ -49,11 +46,21 @@ use serde_json::Deserializer;
 		)
 	}
 
-	fn deceralize_and_format_response(response: Response) -> () {
-		/**
-		 * Take apart string response and format into a struct
-		 */
+	fn deseralize_and_format_response(response: Response, endpoint: Endpoint) -> () {
+		match endpoint {
+			Endpoint::Mapping => {
 
+			},
+			Endpoint::Latest(_) => {
+
+			},
+			Endpoint::Timeseries(_,_) => {
+				
+			},
+			Endpoint::Timestamp(_) => {
+
+			}
+		}
 		 unimplemented!()
 	}
 
@@ -64,9 +71,23 @@ use serde_json::Deserializer;
 	pub fn latest_id(id: &u32) -> Result<ItemPricingData, String> {
 		unimplemented!()
 	}
+mod Requester {
 
-	
+	use serde_json;
+	enum Endpoint {
+		Mapping,
+		Latest(Option<u32>),
+		Timeseries(u32, String),
+		Timestamp(String),
+	}
+	struct Request {
+		request_endpoint: Endpoint
 
-
+	}
+	impl Request {
+		fn new(endpoint: Endpoint) -> Result<RequestData, String> {
+			unimplemented!()
+		}
+	}
 
 }
