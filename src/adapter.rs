@@ -1,4 +1,5 @@
 use serde_json;
+use std::future::Future;
 use reqwest::{Error};
 
 
@@ -15,6 +16,8 @@ enum Endpoint {
 	Timestamp(Time),
 }
 
+
+
 enum Time {
 	FIVE_MIN,
 	ONE_HOUR,
@@ -23,21 +26,22 @@ enum Time {
 
 
 
+
 struct Response {
 	endpoint: Endpoint ,
-	data: serde_json::Value,
+	data: Result<reqwest::Response, reqwest::Error>,
 }
 
+const BASE: String = String::from("https://prices.runescape.wiki/api/v1/osrs");
 
 impl Response {
 	//This needs to be &str w/ a lifetime at some point
-	const BASE: String = String::from("https://prices.runescape.wiki/api/v1/osrs");
-	pub fn get(endpoint: Endpoint) -> Result<Self, Error> {
-		unimplemented!()
-
+	pub fn get(endpoint: Endpoint) -> Result<reqwest::Response, Error> {
+		let url = Response::endpoint_resolver(endpoint);
+		reqwest::blocking::get(url)
 	}
 
-	fn endpoint_resolver(endpoint: Endpoint) -> Result<serde_json::Value, reqwest::Error> {
+	fn endpoint_resolver(endpoint: Endpoint) -> String {
 		let endpoint_str = match endpoint {
 			Endpoint::Mapping => String::from("/mapping"),
 			Endpoint::Latest(opt) => {
@@ -63,15 +67,12 @@ impl Response {
 				};
 				format!("/{}", time_str)
 			}
-		}
+		};
 
 		// At this point the reqwest should be made and matched for errors.
 		//Afterwards the struct is return 
-		unimplemented!()
 
-	}
-	fn resolve_time(time: Time) -> String {
-		
+		format!("{}{}", BASE, endpoint_str)
 	}
 }
 
