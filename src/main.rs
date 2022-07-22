@@ -41,12 +41,28 @@ struct Alchable {
 
 
 
+mod adapter;
 
 
 
-mod wiki_api;
 fn main() {
-    println!("Hello, world!");
+	// use adapter::{Endpoint, Request};
+
+	use adapter::ItemData;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	// wiki_api::untyped_example();
 
 
