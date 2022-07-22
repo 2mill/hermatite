@@ -3,113 +3,85 @@ use std::future::Future;
 use reqwest;
 
 
+struct Item {
+	name: String,
+	id: u32
+}
+struct ItemList {
+	item_list: Vec<Item>,
+}
 
+impl ItemList {
+	fn from(item_list: Vec<Item>) -> Self {
+		ItemList { item_list }
+	}
+}
 
-
-
-
-
-enum Endpoint {
+pub enum Endpoint {
 	Mapping,
 	Latest(Option<u32>),
-	Timeseries(Time, u32),
-	Timestamp(Time),
+	Timeseries(TimeseriesTime, u32),
+	Timestamp(TimestampTime)
 }
-
-
-
-enum Time {
-	FIVE_MIN,
-	ONE_HOUR,
-	SIX_HOURS
+trait Time {
+	fn get_time() -> String;
 }
 
 
 
 
 
-struct Config {
+
+
+pub struct Config {
 	endpoint: Endpoint,
 	user_agent: String,
 }
 
+impl Config {
+	pub fn new(endpoint: Endpoint, user_agent: String) -> Self {
+		Config { endpoint, user_agent }
+	}
+}
+
 const BASE: String = String::from("https://prices.runescape.wiki/api/v1/osrs");
-
-struct ItemData {
-	config: Config,
-	result: reqwest::blocking::Response
-}
-
 trait Adapter {
-	fn new(config: Config) -> Self;
-	fn deseralize(&self) -> ();
+	fn get_mapping() -> reqwest::blocking::Response;
+	fn get_timeseries(crate::adapter::TimeseriesTime) -> reqwest::Response;
+	fn get_timestamp() -> reqwest::Response;
+	fn get_latest(id: Option<u32>) -> reqwest::Response;
 }
 
-impl Adapter for ItemData {
-	//This needs to be &str w/ a lifetime at some point
-	fn new(config: Config) -> Self {
-		let url = ItemData::endpoint_resolver(config.endpoint);
-		ItemData {
-			config,
-			result: reqwest::blocking::get(url).unwrap()
-		}
-	}
 
-	fn deseralize(&self) -> () { 
-		let text = self.result.text().unwrap().as_str();
-		serde_json::from_str(text).unwrap()
+
+struct Adaptee {
+	user_agent: String,
+}
+
+impl Adaptee {
+	fn new(user_agent: String) -> Self {
+		Adaptee { user_agent }	
 	}
 
 }
 
-impl ItemData {
-	fn endpoint_resolver(endpoint: Endpoint) -> String {
-		let endpoint_str = match endpoint {
-			Endpoint::Mapping => String::from("/mapping"),
-			Endpoint::Latest(opt) => {
-				if let Some(id) = opt {
-					format!("/latest?id={}", id.to_string())
-				} else {
-					String::from("/latest")
-				}
-			},
-			Endpoint::Timeseries(timestep, u32) => {
-				let time_str = match timestep {
-					Time::FIVE_MIN => String::from("5m"),
-					Time::ONE_HOUR => String:: from("1h"),
-					Time::SIX_HOURS => String::from("6h")
-				};
-				format!("/timeseries?timestep={}?id={}", time_str, u32.to_string())
-			},
-			Endpoint::Timestamp(timestamp) => {
-				let time_str = match timestamp{
-					Time::FIVE_MIN => String::from("5m"),
-					Time::ONE_HOUR => String::from("1h"),
-					Time::SIX_HOURS => String::from("6h")
-				};
-				format!("/{}", time_str)
-			}
+impl Adapter for Adaptee {
+	fn get_mapping() -> reqwest::blocking::Response {
+		reqwest::blocking::get(format!("{}/mapping", BASE)).unwrap()
+	}
+
+	fn get_timeseries(id, interval: TimeseriesTime) -> reqwest::blocking::Response {
+		let time = match interval {
+			TimeseriesTime::FIVE_MIN => "5m",
+			TimeseriesTime::ONE_HOUR => "1h",
+			TimeseriesTime::SIX_HOURS => "6h"
 		};
 
-		// At this point the reqwest should be made and matched for errors.
-		//Afterwards the struct is return 
+		reqwest::blocking::get(format!("{}/timeserie?id="))
 
-		format!("{}{}", BASE, endpoint_str)
 	}
 
+
 }
-
-
-
-
-
-
-
-
-
-
-// trait Target {
-// 	fn request(endpoint: Endpoint) -> Result<serde_json::Result<T, serde_json::Error, reqwest::Error>;
-// }
 
 
