@@ -42,29 +42,9 @@ struct Alchable {
 
 
 mod adapter;
-
-
-
 fn main() {
-	// use adapter::{Endpoint, Request};
+	use adapter::{Endpoint};
 
-	use adapter::ItemData;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// wiki_api::untyped_example();
-
-
-
+	let body = adapter::fetch(Endpoint::Latest(Some(4151))).unwrap();
+	println!("body = {:?}", body.text().unwrap());
 }
