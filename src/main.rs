@@ -1,14 +1,3 @@
-use chrono::DateTime;
-enum Temp {
-	FIVE_MIN,
-	ONE_HOUR
-}
-
-enum Timestep {
-	FIVE_MIN,
-	ONE_HOUR,
-	SIX_HOURS
-}
 
 struct TimedItem {
 	id: u32,
@@ -31,16 +20,6 @@ struct Alchable {
 	pub low_alch: u32,
 	pub high_alch: u32,
 }
-
-
-
-
-
-
-
-
-
-
 mod adapter;
 fn main() {
 	use adapter::{Endpoint};
