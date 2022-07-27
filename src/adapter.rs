@@ -4,7 +4,7 @@ pub enum Endpoint{
 	Mapping,
 	Latest(Option<u32>),
 	Timestep(u32, Time),
-	Timestamp(Time)
+	Timestamp(Time, Option<i64>) //i64 UNIX TIMESTAMP. I would like this to have better code description.
 }
 enum Time {
 	FiveMinutes,
@@ -12,6 +12,51 @@ enum Time {
 	SixHours, // unofficial for timestamp, but it helps the code structure.
 	TwentyFourHours, //unofficial support for both, but I am going to include it anyways.
 }
+
+trait Target {
+	fn fetch(endpoint: Endpoint) -> Result<self, reqwest::Error>;
+	fn deseralize(&self) -> String;
+}
+
+struct Request {
+	response: reqwest::blocking::Response,
+	endpoint: Endpoint,
+}
+
+impl Target for Request {
+	fn fetch(endpoint: Endpoint) -> Result<Self, reqwest::Error> {
+		const base: &str = "https://prices.runescape.wiki/api/v1/osrs";
+		let endpoint_string: String = match endpoint {
+			Endpoint::Mapping => String::from("/mapping"),
+			Endpoint::Latest(opt) => if let Some(id) = opt {
+				format!("/latest?id={}", id)
+			} else {
+				format!("/latest?")
+			},
+			Endpoint::Timestep(id, step) => {
+				format!("/timeseries?id={}&timestep={}", id, time_resolver(step)
+			},
+			Endpoint::Timestamp(step, timestamp) => {
+				if let Some(time) = timestamp {
+					format!("/{}?timestamp={}", time_resolver(step), time)
+				} else {
+					format!("/{}", time_resolver(step))
+				}
+			}
+		};
+		match reqwest::blocking::get(format!("{}{}", base, endpoint_string)) {
+			Ok(res) => Ok(Request { response: res , endpoint}),
+			Err(err) => Err(err)
+			//More than likely anti pattern.
+		}
+
+	}
+
+	fn deseralize(&self) -> String {
+		unimplemented!()
+	}
+}
+
 
 fn time_resolver(time: Time) -> String {
 	String::from(
@@ -22,24 +67,6 @@ fn time_resolver(time: Time) -> String {
 			Time::TwentyFourHours => "24h"
 		}
 	)
-}
-pub fn fetch(endpoint: Endpoint) -> Result<reqwest::blocking::Response, reqwest::Error> {
-	const base: &str = "https://prices.runescape.wiki/api/v1/osrs";
-	let endpoint_string: String = match endpoint {
-		Endpoint::Mapping => String::from("/mapping"),
-		Endpoint::Latest(opt) => if let Some(id) = opt {
-			format!("/latest?id={}", id)
-		} else {
-			format!("/latest?")
-		},
-		Endpoint::Timestep(id, time) => {
-			format!("/timeseries?id={}&timestep={}", id, time_resolver(time))
-		},
-		Endpoint::Timestamp(time) => {
-			format!("/{}", time_resolver(time))
-		}
-	};
-	reqwest::blocking::get(format!("{}{}", base, endpoint_string))
 }
 
 
