@@ -14,7 +14,7 @@ enum Time {
 }
 
 trait Target {
-	fn fetch(endpoint: Endpoint) -> Result<self, reqwest::Error>;
+	fn fetch(endpoint: Endpoint) -> Self;
 	fn deseralize(&self) -> String;
 }
 
@@ -34,7 +34,7 @@ impl Target for Request {
 				format!("/latest?")
 			},
 			Endpoint::Timestep(id, step) => {
-				format!("/timeseries?id={}&timestep={}", id, time_resolver(step)
+				format!("/timeseries?id={}&timestep={}", id, time_resolver(step))
 			},
 			Endpoint::Timestamp(step, timestamp) => {
 				if let Some(time) = timestamp {
@@ -44,16 +44,18 @@ impl Target for Request {
 				}
 			}
 		};
-		match reqwest::blocking::get(format!("{}{}", base, endpoint_string)) {
-			Ok(res) => Ok(Request { response: res , endpoint}),
-			Err(err) => Err(err)
-			//More than likely anti pattern.
+		Response {
+			response: reqwest::blocking::get(format!("{}{}", base, endpoint_string)).unwrap().text(),
+			endpoint
 		}
+		// match reqwest::blocking::get(format!("{}{}", base, endpoint_string)) {
+		// 	Ok(res) => {
+		// 		Ok(Request { response: serde_json::from_str(res.text()), endpoint })
+		// 	}
+		// 	Err(err) => Err(err)
+		// 	//More than likely anti pattern.
+		// }
 
-	}
-
-	fn deseralize(&self) -> String {
-		unimplemented!()
 	}
 }
 
